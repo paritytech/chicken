@@ -1,0 +1,33 @@
+body {
+	font: 100% "Trebuchet MS", sans-serif;
+	margin: 1em;
+}
+._account {
+	font-family: Monospace;
+}
+._denom {
+	font-size: small;
+	border: 1px #ccc solid;
+	padding: 0px 3px;
+	border-radius: 8px;
+	font-weight: normal;
+	margin-left: 3px;
+}
+._balance {
+	font-weight: bold;
+}
+._grand ._denom { background-color: #ffe3e3; }
+._grand._balance { color: #400; }
+._ether ._denom { background-color: #fff3e5; }
+._ether._balance { color: #420; }
+._finney ._denom { background-color: #ffe; }
+._finney._balance { color: #440; }
+._szabo ._denom { background-color: #efe; }
+._szabo._balance { color: #040; }
+._wei ._denom { background-color: #eff; }
+._wei._balance { color: #044; }
+
+input.balance {
+	width: 5ex;
+	text-align: right;
+}
