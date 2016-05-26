@@ -14,7 +14,7 @@ if (web3.eth.accounts.indexOf(web3.eth.defaultAccount) == -1) {
 			best = b;
 		}
 	}
-	web3.eth.defaultAccount = "0x0037a6b811ffeb6e072da21179d11b1406371c63";
+	web3.eth.defaultAccount = "0x4d6bb4ed029b33cf25d0810b029bd8b1a6bcab7b";
 }
 
 var theChicken;
@@ -40,51 +40,77 @@ function withdraw() {
 }
 
 var log = [];
+var recentLogCount = 0;
 
-function onDeposit(e) {
-	console.log("onDeposit");
+function pushLog(e) {
 	e.order = (e.blockNumber || 1000000000) * 1000 + (e.transactionIndex || 0);
-	log.push(e);
-/*	for (i in log) {
-		if (log[i].)
-	}*/
+	var updated = false;
+	for (i in log) {
+		if (log[i].transactionHash == e.transactionHash) {
+			log[i] = e;
+			updated = true;
+		}
+	}
+	if (!updated)
+		log.push(e);
 	console.log(JSON.stringify(e));
 	log.sort(function (a, b) { return a.order - b.order; });
 	updateLog();
 }
 
-function onWithdraw(e) {
-	console.log("onWithdraw");
-	e.order = (e.blockNumber || 1000000000) * 1000 + (e.transactionIndex || 0);
-	log.push(e);
-	log.sort(function (a, b) { return a.order - b.order; });
-	updateLog();
-}
-	
-function updateLog() {
-	$('#log').html('');
-	var current = web3.eth.blockNumber;
-	for (i in log) {
-		var e = log[i];
-		var item;
-		if (e.event == "Deposit") {
-			item = "<div>DEPOSIT: " + niceBalance(e.args.amount) + " " + niceAccount(e.args.who) + " " + (e.type == "pending" ? "pending" : e.type == "mined" ? (current > e.blockNumber + 100 ? '' : (current - e.blockNumber + 1) + ' confirmation(s)') : e.type + '???') + "</div>";
-		} else if (e.event == "Withdraw") {
-			item = "<div>WITHDRAW: " + niceBalance(e.args.amount) + " worth " + niceBalance(e.args.returned) + " " + niceAccount(e.args.who) + " " + (e.type == "pending" ? "pending" : e.type == "mined" ? (current > e.blockNumber + 100 ? '' : (current - e.blockNumber + 1) + ' confirmation(s)') : '???') + "</div>";
-		}
-		$('#log').append(item);
-	}
+function onDeposit(e) {
+	console.log("onDeposit");
+	pushLog(e);
 }
 
-function onChange() {
-	console.log("Updating");
+function onWithdraw(e) {
+	console.log("onWithdraw");
+	pushLog(e);
+}
+
+function onNewBlock(hash) {
+	console.log("newBlock");
+	if (recentLogCount > 0)
+		updateLog();
+}
+
+function updateState() {
+	console.log("updateState");
 	var d = theChicken.deposits();
 	var w = theChicken.withdraws();
 	$('#deposited').html(niceBalance(d));
 	$('#withdrawn').html(niceBalance(d - w));
 	
 	$('#status').html((+w < +d) ? (+w < +d / 2) ? "-10%" : "+10%" : "n/a");
-	updateLog();
+}
+
+function updateLog() {
+	console.log("updateLog");
+	$('#log').html('');
+	var current = web3.eth.blockNumber;
+	recentLogCount = 0;
+	for (i in log) {
+		var e = log[log.length - 1 - 	i];
+		var item;
+		var status = '';
+		if (e.type == "pending") {
+			recentLogCount++;
+			status = "pending";
+		} else if (e.type == "mined" && current <= e.blockNumber + 12) {
+			recentLogCount++;
+			status = (current - e.blockNumber + 1) + ' confirmation(s)';
+		} else if (e.type == "mined") {
+			status = "finalized " + (new Date(web3.eth.getBlock(e.blockNumber).timestamp * 1000)).toLocaleString();
+		}
+
+		if (e.event == "Deposit") {
+			item = "<div>DEPOSIT: " + niceBalance(e.args.amount) + " " + niceAccount(e.args.who) + " " + status + "</div>";
+		} else if (e.event == "Withdraw") {
+			item = "<div>WITHDRAW: " + niceBalance(e.args.amount) + " worth " + niceBalance(e.args.returned) + " " + niceAccount(e.args.who) + " " + status + "</div>";
+		}
+
+		$('#log').append(item);
+	}
 }
 
 function init() {
@@ -97,9 +123,11 @@ function init() {
 	$('#deposit').click(deposit);
 	$('#withdraw').click(withdraw);
 	
-	onChange();
+	updateState();
 	
 	theChicken.Deposit({who: web3.eth.defaultAccount}, {fromBlock: '0', toBlock: 'pending'}).watch(function(error, logs) { onDeposit(logs); });
 	theChicken.Withdraw({who: web3.eth.defaultAccount}, {fromBlock: '0', toBlock: 'pending'}).watch(function(error, logs) { onWithdraw(logs); });
-	theChicken.allEvents({fromBlock: '0', toBlock: 'pending'}).watch(function(error, logs) { onChange(logs); });
+	web3.eth.filter("latest").watch(function(error, latestHash) { onNewBlock(latestHash); })
+
+	theChicken.allEvents({fromBlock: 'latest', toBlock: 'pending'}).watch(function(error, logs) { updateState(); });
 }
