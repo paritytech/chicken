@@ -16,7 +16,7 @@ if (web3.eth.accounts.indexOf(web3.eth.defaultAccount) == -1) {
 }
 
 function extendMethod(name, f) {
-	var extensionsFunction = function () {
+	var extensionFunction = function () {
 		var args = Array.prototype.slice.call(arguments).filter(function (a) {return a !== undefined; });
 		var callback = this.extractCallback(args);
 		var defaultBlock = this.extractDefaultBlock(args);
@@ -26,12 +26,11 @@ function extendMethod(name, f) {
 		f(this)(payload, defaultBlock, function (error, output) { callback(error, output); });
 	};
 	var originalAttach = SolidityFunction.prototype.attachToContract;
-	console.log(SolidityFunction, originalAttach);
 	SolidityFunction.prototype.attachToContract = function (contract) {
 		var args = [].slice.call(arguments);
 		var ret = originalAttach.apply(this, args);
 		var displayName = this.displayName();
-		contract[displayName][name] = extensionsFunction.bind(this);
+		contract[displayName][name] = extensionFunction.bind(this);
 		return ret;
 	};
 }

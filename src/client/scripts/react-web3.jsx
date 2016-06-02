@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import React from 'react';
 import {render} from 'react-dom';
 import 'jquery';
@@ -57,39 +58,55 @@ Trace.propTypes = { trace: React.PropTypes.object };
 
 var denominations = [ "wei", "Kwei", "Mwei", "Gwei", "szabo", "finney", "ether", "grand", "Mether", "Gether", "Tether", "Pether", "Eether", "Zether", "Yether", "Nether", "Dether", "Vether", "Uether" ];
 
-function initDenominations () {
-	var items = denominations.map(function(d, i) { return '<option value="' + i + '">' + d + '</option>'; });
-	$('.denominations').append(items.join(''));
-	$('.denominations').val("6");
-}
+function splitValue(a) {
+	var i = 0;
+	var a = new BigNumber('' + a);
+	if (a.gte(new BigNumber("10000000000000000")) && a.lt(new BigNumber("100000000000000000000000")) || a.eq(0))
+		i = 6;
+	else
+		for (var aa = a; aa.gte(1000) && i < denominations.length - 1; aa = aa.div(1000))
+			i++;
 
-$(document).ready(function() {
-	initDenominations();
-});
+	for (var j = 0; j < i; ++j)
+		a = a.div(1000);
+
+	return {base: a, denom: i};
+}
 
 export class Balance extends React.Component {
 	render () {
-		var a = this.props.value;
-		var i = 0;
-		if (a >= 10000000000000000 && a < 100000000000000000000000 || a == 0)
-			i = 6;
-		else
-			for (var aa = a; aa >= 1000 && i < denominations.length - 1; aa /= 1000)
-				i++;
-
-		for (var j = 0; j < i; ++j)
-			a /= 1000;
-		var a = Math.round(a * 1000) / 1000;
-		a = (a + '').replace(/(\d)(?=(\d{3})+$)/g, "$1,");
-
+		var s = splitValue(this.props.value);
+		var a = ('' + s.base.mul(1000).round().div(1000)).replace(/(\d)(?=(\d{3})+$)/g, "$1,");
 		return (
-			<span className={'_balance _' + denominations[i]}>
+			<span className={'_balance _' + denominations[s.denom]}>
 				{a}
 				<span className="_denom">
-					{denominations[i]}
+					{denominations[s.denom]}
 				</span>
 			</span>
 		);
 	}
+} 
+//Balance.propTypes = { value: React.PropTypes.object };
+
+export class InputBalance extends React.Component {
+	render () {
+		var s = splitValue(this.props.value);
+		return <span>
+			<input classNames="balance" ref={(ref) => this.theBalance = ref} style={{width: '5ex'}} value={'' + s.base} onChange={this.handleChange.bind(this)} />
+			<select classNames="denominations" ref={(ref) => this.theDenominations = ref} onChange={this.handleChange.bind(this)} value={s.denom}>
+				{denominations.map(function(d, i) { return <option value={i} key={i}>{d}</option>; })}
+			</select>
+		</span>;
+	}
+
+	handleChange () {
+		var v = this.theBalance.value;
+		if (v == '')
+			v = new BigNumber(0);
+		else
+			v = (new BigNumber(v)).mul((new BigNumber(10)).toPower((+this.theDenominations.value) * 3));
+
+		this.props.onChanged(v);
+	}
 }
-Balance.propTypes = { value: React.PropTypes.object };

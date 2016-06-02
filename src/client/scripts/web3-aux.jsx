@@ -12,13 +12,6 @@ Array.prototype.spliceArray = function(index, n, array) {
 	return Array.prototype.splice.apply(this, [index, n].concat(array));
 }
 
-export function amount(x) {
-	var v = $(x + " .balance").val();
-	if (v == '')
-		return new BigNumber(0);
-	return (new BigNumber(v)).mul((new BigNumber(10)).toPower($(x + " .denominations").val() * 3));
-}
-
 export var Instructions = {
 	"STOP": 0x00,
 	"ADD": 0x01,

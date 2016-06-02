@@ -1,0 +1,5 @@
+node_modules/
+bin/
+dist/bundle.js
+package/
+chicken.sublime*

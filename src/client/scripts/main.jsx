@@ -1,31 +1,71 @@
 import styles from "../style.css";
 import React from 'react';
+import BigNumber from 'bignumber.js';
 import {render} from 'react-dom';
-import {HexDump, Balance} from './react-web3.jsx';
+import {HexDump, Balance, InputBalance} from './react-web3.jsx';
 import {web3, Chicken} from './chicken.jsx';
-import {amount, niceAccount} from './web3-aux.js';
+import {amount, niceAccount} from './web3-aux.jsx';
 import {LogManager} from './logmanager.jsx';
 import {Withdraw, Deposit} from './react-chicken.jsx';
 
 var theChicken = Chicken.at("0x6a669ba5cd02d4d59b6d7668d5ab563e443430e4");
 
-function deposit() {
-	web3.eth.sendTransaction({to: theChicken.address, value: amount('#transfer'), gas: 65000});
+function transactionInterceptor(t) {
+	if ($('#trace').is(':checked')) {
+		showTrace(processTrace(web3.eth.vmTraceCall(t)));
+	}
+	if ($('#diff').is(':checked')) {
+		console.log("stateDiffCall: " + web3.eth.stateDiffCall(t));
+	}
 }
 
-function withdraw() {
-	var a = amount('#transfer');
-	if ($('#trace').is(':checked')) {
-		showTrace(processTrace(theChicken.withdraw.vmTrace(a, {gas: 100000})));
+//TODO: web3.eth._installInceptor(transactionInterceptor);
+
+class InteractionConsole extends React.Component {
+	constructor() {
+		super();
+		this.state = {
+			value: new BigNumber("1000000000000000000")
+		}
+		this.deposit = this.deposit.bind(this);
+		this.withdraw = this.withdraw.bind(this);
 	}
-	theChicken.withdraw(a, {gas: 100000});
+
+	deposit () {
+		web3.eth.sendTransaction({to: theChicken.address, value: this.transfer, gas: 65000});
+	}
+
+	withdraw() {
+		theChicken.withdraw(this.state.value, {gas: 100000});
+	}
+
+	render () {
+		return <div>
+			<InputBalance id="transfer" value={this.state.value} onChanged={()=>this.setState({value: v})}/>
+			<button id="deposit" onClick={this.deposit}>Deposit</button>
+			<button id="withdraw" onClick={this.withdraw}>Withdraw</button>
+		</div>;
+	}
 }
 
 export class ChickenApp extends React.Component {
 	render () {
 		return <div>
-			<HexDump data={[3, 4, 5, 6]}></HexDump>
-			<Balance value={web3.eth.getBalance("0x4d6bb4ed029b33cf25d0810b029bd8b1a6bcab7b")} />
+			<div>Contract address: <span id="chickenaddress">Unknown</span><button id="deploy">Deploy</button></div>
+			<div>Your address: <span id="youraddress">Unknown</span></div>
+			<div>Balance in wallet: <span id="walletbalance">Unknown</span></div>
+			<div>Balance in chicken: <span id="chickenbalance">Unknown</span></div>
+
+			<div>Status:
+				<span id="status">Unknown</span> 
+				(<span id="withdrawn">Unknown</span> remaining from <span id="deposited">Unknown</span> deposited)
+			</div>
+
+			<InteractionConsole />
+
+			<label for="tracing">Tracing</label><input type="checkbox" disabled="1" id="tracing" />
+			<label for="vmtracing">VM Tracing</label><input type="checkbox" id="vmtracing" />
+			<label for="diffing">Diffing</label><input type="checkbox" id="diffing" />
 		</div>;
 	}
 }
@@ -78,8 +118,6 @@ function updateState() {
 }
 
 function init() {
-	$('#deposit').click(deposit);
-	$('#withdraw').click(withdraw);
 	$('#deploy').click(function() {
 		Chicken.deploy(web3.eth.defaultAccount, function(error, contract) {
 			console.log("Returned: " + error + "/" + JSON.stringify(contract));

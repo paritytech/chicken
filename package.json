@@ -1,7 +1,7 @@
 {
   "name": "chicken",
   "version": "1.0.0",
-  "description": "Actually a set of contracts, but contract.sol is the main one. Very simple multiplayer game. Anyone can place any amount of money in the contract; the first half of the money taken out comes out at a 10% loss; the second half at a 10% profit.",
+  "description": "A very simple multiplayer economic game.",
   "main": "webpack.config.js",
   "dependencies": {
     "babel": "^6.5.2",
@@ -9,7 +9,6 @@
     "babel-loader": "^6.2.4",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-react": "^6.5.0",
-    "bignumber": "^1.1.0",
     "bignumber.js": "^2.3.0",
     "expose-loader": "^0.7.1",
     "jquery": "^2.2.4",
