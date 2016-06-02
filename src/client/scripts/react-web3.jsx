@@ -1,7 +1,7 @@
+import 'jquery';
 import BigNumber from 'bignumber.js';
 import React from 'react';
 import {render} from 'react-dom';
-import 'jquery';
 
 function paddedHex(i, l) {
 	return ("0".repeat(l) + i.toString(16)).substr(-l);
@@ -32,29 +32,6 @@ export class HexDump extends React.Component {
 }
 HexDump.propTypes = { visible: React.PropTypes.bool, data: React.PropTypes.array };
 HexDump.defaultProps = { visible: true };
-
-export class Trace extends React.Component {
-	render () {
-		var code = this.props.trace.code;
-		var rows = this.props.trace.ops.map(function(l) {
-			var info = Instructions[code[l.pc]];
-			var name = (typeof(info) == "object") ? info.name : "!?";
-			return (<div style={{whiteSpace: "nowrap"}}>
-				<span style={{fontSize: "x-small", fontFamily: "monospace"}}>{paddedHex(l.pc, 4)}</span>&nbsp;
-				<span style={{fontWeight: "bold", fontFamily: "monospace", display: "inline-block", width: "8em"}}>{name}</span>&nbsp;
-				<span style={{color: "green", fontSize: "small", fontFamily: "monospace"}}>{l.ex !== null ? l.ex.push.slice().reverse().join(' ') : ''}</span>&nbsp;
-				<span style={{color: "red", fontSize: "small", fontFamily: "monospace"}}>{l.pop.slice().reverse().join(' ')}</span>&nbsp;
-				<span style={{color: "#ccc", fontSize: "x-small", fontFamily: "monospace"}}>{l.stack.slice().reverse().join(' ')}</span>&nbsp;
-				<HexDump visible={l.ex && l.ex.mem} data={l.memory} />
-				<div style={{display: l.ex && l.ex.store ? 'block' : 'none'}}>
-					{JSON.stringify(l.storage)}
-				</div>
-			</div>);
-		});
-		return (<div>{rows}</div>);
-	}
-}
-Trace.propTypes = { trace: React.PropTypes.object };
 
 var denominations = [ "wei", "Kwei", "Mwei", "Gwei", "szabo", "finney", "ether", "grand", "Mether", "Gether", "Tether", "Pether", "Eether", "Zether", "Yether", "Nether", "Dether", "Vether", "Uether" ];
 
@@ -109,4 +86,75 @@ export class InputBalance extends React.Component {
 
 		this.props.onChanged(v);
 	}
+}
+
+export const Account = props => {
+	var a = props.addr.substr(0, 8) + "..." + props.addr.substr(36);
+	return <span className="account">{a}</span>;
+};
+
+export class AccountBalance extends React.Component {
+	constructor() {
+		super();
+		this.state = { balance: new BigNumber(0) };
+	}
+
+	updateState() {
+		this.setState({
+			balance: web3.eth.getBalance(this.props.address)
+		});
+	}
+
+	componentWillMount() {
+		this.filter = web3.eth.filter("latest");
+		this.filter.watch(this.updateState.bind(this));
+	}
+
+	componentWillUnmount() {
+		this.filter.stopWatching();
+	}
+
+	componentWillReceiveProps(nextProps) {
+		if (nextProps.address !== this.props.address) {
+			this.componentWillUnmount();
+			this.componentDidMount();
+		}
+	}
+
+	render() { return <Balance value={this.state.balance} />; }
+}
+
+export class TokenContractBalance extends React.Component {
+	constructor() {
+		super();
+		this.state = { balance: new BigNumber(0) };
+	}
+
+	updateState() {
+		this.setState({
+			balance: this.props.contract.balance(this.props.address)
+		});
+	}
+
+	componentWillMount() {
+		this.filter = this.props.contract.allEvents({fromBlock: 'latest', toBlock: 'pending'});
+		this.filter.watch(this.updateState.bind(this));
+		// TODO: this should get called anyway.
+		this.updateState();
+	}
+
+	componentWillUnmount() {
+		this.filter.stopWatching();
+	}
+
+	componentWillReceiveProps(nextProps) {
+		if (nextProps.contract.address !== this.props.contract.address) {
+			this.componentWillUnmount();
+			this.componentDidMount();
+		}
+		else if (nextProps.address !== this.props.address)
+			updateState();
+	}
+
+	render() { return <Balance value={this.state.balance} />; }
 }

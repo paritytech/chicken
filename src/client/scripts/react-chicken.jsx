@@ -2,6 +2,7 @@ import React from 'react';
 import {render} from 'react-dom';
 import {ConfirmEvent} from './react-events.jsx';
 import {Balance} from './react-web3.jsx';
+import {web3} from './web3plus.jsx';
 
 export var Deposit = React.createClass({
 	render: function() {

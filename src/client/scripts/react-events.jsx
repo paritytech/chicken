@@ -7,7 +7,7 @@ export var ConfirmingEvent = React.createClass({
   render: function() {
     return (
       <div className="confirmingEvent card">
-     	<div className="progress"><span className="progress-done" style={{paddingLeft: (this.props.confirmations / 12 * 100) + '%'}}></span></div>
+     	<div className="progress"><span style={{paddingLeft: (this.props.confirmations / 12 * 100) + '%'}}></span></div>
       	<div className={'card-body ' + this.props.cardClass}>
 	      	<div style={{float: 'right'}}>{this.props.confirmations} confirmations</div>
    	    	{this.props.children}

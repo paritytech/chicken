@@ -1,17 +1,3 @@
-import BigNumber from 'bignumber.js';
-import 'jquery';
-
-var web3 = new Web3();
-
-export function niceAccount(a) {
-	var a = a.substr(0, 8) + "..." + a.substr(36);
-	return '<span class="_account">' + a + '</span>';
-}
-
-Array.prototype.spliceArray = function(index, n, array) {
-	return Array.prototype.splice.apply(this, [index, n].concat(array));
-}
-
 export var Instructions = {
 	"STOP": 0x00,
 	"ADD": 0x01,

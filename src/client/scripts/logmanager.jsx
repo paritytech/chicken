@@ -1,7 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
 import {Log} from './react-events.jsx';
-import {web3} from './chicken.jsx';
+import {web3} from './web3plus.jsx';
 
 export var LogManager = function(events, factory, target) {
 	this.log = [];
@@ -18,7 +18,7 @@ export var LogManager = function(events, factory, target) {
 };
 
 LogManager.prototype.pushLog = function(e) {
-//	console.log("New log: " + JSON.stringify(e));
+//	console.log(Date.now() + ": New log: " + JSON.stringify(e));
 	e.order = (e.blockNumber || 1000000000) * 1000 + (e.transactionIndex || 0);
 	var updated = false;
 	for (var i = 0; i < this.log.length; ++i)

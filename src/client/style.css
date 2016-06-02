@@ -48,6 +48,7 @@ span.progress-done {
   height: 2pt;
   vertical-align: top;
   background: #58f;
+  animation-duration: 15s;
 }
 
 div.card {
