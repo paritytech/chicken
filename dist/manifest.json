@@ -1,0 +1,8 @@
+{
+	"id": "chicken",
+	"name": "Chicken!",
+	"description": "A simple game of Chicken. Who will withdraw first?",
+	"version": "1.0",
+	"author": "Gav Wood",
+	"iconUrl": "title.jpg"
+}
