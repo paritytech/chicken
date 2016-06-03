@@ -1,7 +1,8 @@
 import SolidityFunction from 'web3/lib/web3/function';
 import Web3 from 'web3';
 
-export var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+export var web3 = typeof(window.web3) == "object" ? window.web3 : new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+
 if (web3.eth.accounts.indexOf(web3.eth.defaultAccount) == -1) {
 	var best = 0;
 	web3.eth.accounts.forEach(function(a) {

@@ -33,7 +33,7 @@ input.balance {
 	text-align: right;
 }
 
-div#log {
+div.log {
 	float: right;
 }
 

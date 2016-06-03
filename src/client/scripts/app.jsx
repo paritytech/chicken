@@ -2,10 +2,10 @@ import styles from "../style.css";
 import React from 'react';
 import BigNumber from 'bignumber.js';
 import {render} from 'react-dom';
-import {web3, installInceptor} from './web3plus.jsx';
+import {web3} from './web3plus.jsx';
 import {HexDump, Balance, InputBalance, TokenContractBalance, Account, AccountBalance} from './react-web3.jsx';
-import {LogManager} from './logmanager.jsx';
-import {Withdraw, Deposit} from './react-chicken.jsx';
+import {Withdraw, Deposit, ChickenStatus, InteractionConsole} from './react-chicken.jsx';
+import {Log} from './react-events.jsx';
 
 export var Chicken = web3.eth.contract([{"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"withdraw","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"deposits","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"swing","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"withdraws","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balance","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"who","type":"address"},{"indexed":false,"name":"amount","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"who","type":"address"},{"indexed":false,"name":"amount","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"}],"name":"Withdraw","type":"event"}]);
 Chicken.deploy = function(_from, _f) {
@@ -21,80 +21,11 @@ Chicken.deploy = function(_from, _f) {
 	});
 };
 
-class InteractionConsole extends React.Component {
-	constructor() {
-		super();
-		this.state = {
-			value: new BigNumber("1000000000000000000")
-		}
-		this.deposit = this.deposit.bind(this);
-		this.withdraw = this.withdraw.bind(this);
-	}
-
-	deposit () {
-		web3.eth.sendTransaction({to: this.props.chicken.address, value: this.state.value, gas: 65000});
-	}
-
-	withdraw() {
-		this.props.chicken.withdraw(this.state.value, {gas: 100000});
-	}
-
-	render () {
-		return <div>
-			<InputBalance id="transfer" value={this.state.value} onChanged={()=>this.setState({value: v})}/>
-			<button id="deposit" onClick={this.deposit}>Deposit</button>
-			<button id="withdraw" onClick={this.withdraw}>Withdraw</button>
-		</div>;
-	}
-}
-
-class ChickenStatus extends React.Component {
-	constructor() {
-		super();
-		this.state = { deposits: new BigNumber(0), withdraws: new BigNumber(0) };
-	}
-
-	updateState() {
-		this.setState({
-			deposits: this.props.chicken.deposits(),
-			withdraws: this.props.chicken.withdraws()
-		});
-	}
-
-	componentWillMount() {
-		this.filter = this.props.chicken.allEvents({fromBlock: 'latest', toBlock: 'pending'});
-		this.filter.watch(this.updateState.bind(this));
-		// TODO: this should get called anyway.
-		this.updateState();
-	}
-
-	componentWillUnmount() {
-		this.filter.stopWatching();
-	}
-
-	componentWillReceiveProps(nextProps) {
-		if (nextProps.chicken.address !== this.props.chicken.address) {
-			this.componentWillUnmount();
-			this.componentDidMount();
-		}
-	}
-
-	render() {	
-		var d = this.state.deposits;
-		var w = this.state.withdraws;
-		var r = d.sub(w);
-		return <span>
-			<span id="status">{(+w < +d) ? (+w < +d / 2) ? "-10%" : "+10%" : "n/a"}</span> 
-			(<Balance value={r} /> remaining from <Balance value={d} /> deposited)
-		</span>;
-	}
-};
-
 export class ChickenApp extends React.Component {
 	render() {
 		var theChicken = Chicken.at(this.props.address);
 		return <div>
-			<div id="log"></div>
+			<Log who={web3.eth.defaultAccount} contract={theChicken} events={{"Deposit": Deposit, "Withdraw": Withdraw}} />
 			<h3>Chicken</h3>
 			<div>Contract address: <Account addr={this.props.address} /></div>
 			<div>Your address: <Account addr={web3.eth.defaultAccount} /></div>
@@ -108,30 +39,6 @@ export class ChickenApp extends React.Component {
 		</div>;
 	}
 }
-
-function init() {
-/*	$('#deploy').click(function() {
-		Chicken.deploy(web3.eth.defaultAccount, function(error, contract) {
-			console.log("Returned: " + error + "/" + JSON.stringify(contract));
-			if (typeof(contract.address) != 'undefined') {
-				theChicken = contract;
-				updateState();
-			}
-			else
-				console.log("Error deploying: " + error);
-		});
-	});*/
-	
-	// TODO: reactify properly.
-	var theChicken = Chicken.at("0x6a669ba5cd02d4d59b6d7668d5ab563e443430e4");
-	window.lm = new LogManager(
-		[theChicken.Deposit, theChicken.Withdraw],
-		{"Withdraw": Withdraw, "Deposit": Deposit},
-		document.getElementById('log')
-	);
-}
-
-$(document).ready(init);
 
 // for debug console happiness.
 window.web3 = web3;
