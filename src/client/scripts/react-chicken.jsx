@@ -1,6 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
-import {Balance} from './react-web3.jsx';
+import BigNumber from 'bignumber.js';
+import {InputBalance, Balance} from './react-web3.jsx';
 import {ConfirmEvent} from './react-events.jsx';
 
 export class Deposit extends React.Component {
