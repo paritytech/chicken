@@ -1,7 +1,10 @@
 import SolidityFunction from 'web3/lib/web3/function';
 import Web3 from 'web3';
 
-export var web3 = typeof(window.web3) == "object" ? window.web3 : new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+console.log(typeof(window.web3));
+
+var isManaged = typeof(window.web3) == "object";
+export var web3 = isManaged ? window.web3 : new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 if (web3.eth.accounts.indexOf(web3.eth.defaultAccount) == -1) {
 	var best = 0;
@@ -12,7 +15,9 @@ if (web3.eth.accounts.indexOf(web3.eth.defaultAccount) == -1) {
 			best = b;
 		}
 	});
-	web3.eth.defaultAccount = "0x4d6bb4ed029b33cf25d0810b029bd8b1a6bcab7b";
+	if (!isManaged && typeof(web3.eth.defaultAccount) != 'string') {
+		web3.eth.defaultAccount = "0x4d6bb4ed029b33cf25d0810b029bd8b1a6bcab7b";
+	}
 	console.log("Default account was undefined or invalid. Now set to: " + web3.eth.defaultAccount);
 }
 

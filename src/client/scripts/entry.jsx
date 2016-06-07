@@ -11,6 +11,7 @@ web3.eth.installInterceptor(t => {
 	var out = web3.eth.traceCall(t, ["trace", "vmTrace", "stateDiff"]);
 
 	if ($('#vmTrace').is(':checked')) {
+		console.log(out.vmTrace);
 		showVMTrace(processVMTrace(out.vmTrace));
 	}
 	if ($('#stateDiff').is(':checked')) {

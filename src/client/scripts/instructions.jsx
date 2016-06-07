@@ -1,4 +1,4 @@
-export var Instructions = {
+var Instructions = {
 	"STOP": 0x00,
 	"ADD": 0x01,
 	"MUL": 0x02,
@@ -273,3 +273,7 @@ Instructions[Instructions.CALLCODE] = { name: 'CALLCODE', additional: 0, args: 7
 Instructions[Instructions.RETURN] = { name: 'RETURN', additional: 0, args: 2, ret: 0, side_effects: true, tier: GasPriceTier.Zero };
 Instructions[Instructions.DELEGATECALL] = { name: 'DELEGATECALL', additional: 0, args: 6, ret: 1, side_effects: true, tier: GasPriceTier.Special };
 Instructions[Instructions.SUICIDE] = { name: 'SUICIDE', additional: 0, args: 1, ret: 0, side_effects: true, tier: GasPriceTier.Zero };
+
+export default function get_info(opcode) {
+	return Instructions[opcode];
+}

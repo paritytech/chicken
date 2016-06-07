@@ -1,7 +1,6 @@
 import React from 'react';
 import {render} from 'react-dom';
 import TimeAgo from 'react-timeago'
-import {LogManager} from './logmanager.jsx';
 import {web3} from './web3plus.jsx';
 
 var ConfirmingEvent = React.createClass({
@@ -65,10 +64,23 @@ export class Log extends React.Component {
 		this.log = [];
 	}
 
-	componentWillMount() {
+	componentWillMount() { this.setupFilters(this.props.who, this.props.events, this.props.contract); }
+	componentWillUnmount() { this.takeDownFilters(); }
+
+	takeDownFilters() {
+		this.watches.forEach(w => w.stopWatching());
+		this.watches = [];
+		this.setState({logs: []});
+		this.log = [];
+		this.recentLogCount = 0;
+		this.deferredUpdate = null;
+		this.noteLogChanged();
+	}
+
+	setupFilters(who, events, contract) {
 		var t = this;
-		for (var e in this.props.events) {
-			var f = this.props.contract[e]({who: this.props.who}, {fromBlock: '0', toBlock: 'pending'});
+		for (var e in events) {
+			var f = contract[e]({who: who}, {fromBlock: '0', toBlock: 'pending'});
 			f.watch((error, l) => { t.pushLog(l); });
 			this.watches.push(f);
 		}
@@ -77,16 +89,11 @@ export class Log extends React.Component {
 		this.watches.push(f);
 	}
 
-	componentWillUnmount() {
-		this.watches.forEach(w => w.stopWatching());
-		this.watches = [];
-	}
-
 	componentWillReceiveProps(nextProps) {
 		// TODO ...or events keys...
 		if (nextProps.who !== this.props.who || nextProps.contract.address !== this.props.contract.address) {
-			this.componentWillUnmount();
-			this.componentDidMount();
+			this.takeDownFilters();
+			this.setupFilters(nextProps.who, nextProps.events, nextProps.contract);
 		}
 	}
 
@@ -96,7 +103,7 @@ export class Log extends React.Component {
 	}
 
 	pushLog(e) {
-	//	console.log(Date.now() + ": New log: " + JSON.stringify(e));
+//		console.log(Date.now() + ": New log: " + JSON.stringify(e));
 		e.order = (e.blockNumber || 1000000000) * 1000 + (e.transactionIndex || 0);
 		var updated = false;
 		for (var i = 0; i < this.log.length; ++i)

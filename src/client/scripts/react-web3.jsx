@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import React from 'react';
 import {render} from 'react-dom';
 
-function paddedHex(i, l) {
+export function paddedHex(i, l) {
 	return ("0".repeat(l) + i.toString(16)).substr(-l);
 }
 
@@ -89,8 +89,12 @@ export class InputBalance extends React.Component {
 }
 
 export const Account = props => {
-	var a = props.addr.substr(0, 8) + "..." + props.addr.substr(36);
-	return <span className="account">{a}</span>;
+	if (typeof(props.addr) == "string") {
+		var a = props.addr.substr(0, 8) + "..." + props.addr.substr(36);
+		return <span className="account">{a}</span>;
+	} else {
+		return <span className="noaccount">[none]</span>;
+	}
 };
 
 export class AccountBalance extends React.Component {
@@ -117,7 +121,7 @@ export class AccountBalance extends React.Component {
 	componentWillReceiveProps(nextProps) {
 		if (nextProps.address !== this.props.address) {
 			this.componentWillUnmount();
-			this.componentDidMount();
+			this.componentWillMount();
 		}
 	}
 
@@ -150,10 +154,10 @@ export class TokenContractBalance extends React.Component {
 	componentWillReceiveProps(nextProps) {
 		if (nextProps.contract.address !== this.props.contract.address) {
 			this.componentWillUnmount();
-			this.componentDidMount();
+			this.componentWillMount();
 		}
 		else if (nextProps.address !== this.props.address)
-			updateState();
+			this.updateState();
 	}
 
 	render() { return <Balance value={this.state.balance} />; }

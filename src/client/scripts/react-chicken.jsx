@@ -80,7 +80,7 @@ export class ChickenStatus extends React.Component {
 	componentWillReceiveProps(nextProps) {
 		if (nextProps.chicken.address !== this.props.chicken.address) {
 			this.componentWillUnmount();
-			this.componentDidMount();
+			this.componentWillMount();
 		}
 	}
 

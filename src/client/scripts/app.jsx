@@ -22,15 +22,38 @@ Chicken.deploy = function(_from, _f) {
 };
 
 export class ChickenApp extends React.Component {
+	constructor() {
+		super();
+		this.state = {
+			userAddress: "0x0000000000000000000000000000000000000000"
+		};
+		setInterval(this.checkUserAddress.bind(this), 500);
+	}
+
+	checkUserAddress() {
+		var a = web3.eth.defaultAccount;
+		if (typeof(a) == "undefined" && web3.eth.accounts.length == 1) {
+			a = web3.eth.accounts[0];
+		}
+		var a = typeof(a) == 'string' ? a : "0x0000000000000000000000000000000000000000";
+
+		if (a != this.state.userAddress) {
+			this.setState({
+				userAddress: a
+			});
+		}
+	}
+
 	render() {
 		var theChicken = Chicken.at(this.props.address);
+		var theUser = this.state.userAddress;
 		return <div>
-			<Log who={web3.eth.defaultAccount} contract={theChicken} events={{"Deposit": Deposit, "Withdraw": Withdraw}} />
+			<Log who={theUser} contract={theChicken} events={{"Deposit": Deposit, "Withdraw": Withdraw}} />
 			<h3>Chicken</h3>
 			<div>Contract address: <Account addr={this.props.address} /></div>
-			<div>Your address: <Account addr={web3.eth.defaultAccount} /></div>
-			<div>Balance in wallet: <AccountBalance address={web3.eth.defaultAccount} /></div>
-			<div>Balance in chicken: <TokenContractBalance contract={theChicken} address={web3.eth.defaultAccount} /></div>
+			<div>Your address: <Account addr={theUser} /></div>
+			<div>Balance in wallet: <AccountBalance address={theUser} /></div>
+			<div>Balance in chicken: <TokenContractBalance contract={theChicken} address={theUser} /></div>
 			<div>Status: <ChickenStatus chicken={theChicken}/></div>
 			<InteractionConsole chicken={theChicken} />
 			<label for="trace">Tracing</label><input type="checkbox" id="trace" />
